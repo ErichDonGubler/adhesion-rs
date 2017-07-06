@@ -3,28 +3,51 @@
 #[macro_use]
 extern crate adhesion;
 
-#[test]
-#[should_panic]
-fn smoke() {
-    contract! {
-        fn asdf(asda: bool, stuff: u64) -> bool {
-            pre {
-                println!("Running pre-condition");
-                assert!(stuff < 30);
-            }
-            body {
-                asda
-            }
-            post(return_value) {
-                println!("Running post-condition");
-                assert!(return_value == asda);
-            }
+contract! {
+    fn asdf(asda: bool, stuff: u64) -> bool {
+        pre {
+            // println!("Running pre-condition check");
+            assert!(stuff < 30, "pre-condition violation");
+        }
+        body {
+            // println!("Running body");
+            asda
+        }
+        post(return_value) {
+            // println!("Running post-condition check");
+            assert!(return_value == (stuff % 3 == 0), "post-condition violation");
+        }
+        invariant {
+            // println!("Running invariant check");
+            assert!(stuff > 5, "invariant violation");
         }
     }
+}
 
-    let two = 2;
-    let huge_number = 64_000;
+#[test]
+#[should_panic]
+fn pre_failure() {
+    asdf(true, 64);
+}
 
-    asdf(true, huge_number);
+#[test]
+#[should_panic]
+fn invariant_failure() {
+    asdf(false, 3);
+}
+
+
+#[test]
+#[should_panic]
+fn post_failure() {
+    asdf(true, 7);
+}
+
+#[test]
+fn no_failures() {
+    asdf(true, 6);
+    asdf(false, 7);
+    asdf(false, 11);
+    asdf(true, 24);
 }
 
