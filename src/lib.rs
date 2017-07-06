@@ -1,11 +1,7 @@
 #[macro_export]
-macro_rules! call_inner {
-    ($arg: ident : $type: ty, $($rest: tt)*) => (($arg, call_inner!($($rest)*)));
-    ($arg: ident : $type: ty) => ($arg);
-}
-
-#[macro_export]
 macro_rules! contract {
+    (@call_inner $arg: ident : $type: ty, $($rest: tt)*) => (($arg, contract!(@call_inner $($rest)*)));
+    (@call_inner $arg: ident : $type: ty) => ($arg);
     (
         fn
         $name: ident
@@ -29,7 +25,7 @@ macro_rules! contract {
                 $body
             };
 
-            let $return_value = std::ops::Fn::call(&inner, call_inner!($($args : $types),*));
+            let $return_value = std::ops::Fn::call(&inner, contract!(@call_inner $($args : $types),*));
             // let return_value = inner call_inner!($($args : $types),*);
 
             if cfg!(debug_assertions) {
