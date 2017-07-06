@@ -1,5 +1,3 @@
-#![feature(fn_traits)]
-
 #[macro_use]
 extern crate adhesion;
 

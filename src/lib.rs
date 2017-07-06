@@ -22,11 +22,11 @@ macro_rules! contract {
 
             $invariant_block
 
-            let inner = |$($args),*| -> $return_type {
+            fn inner($($args : $types),*) -> $return_type {
                 $body
-            };
+            }
 
-            let $return_value = std::ops::Fn::call(&inner, contract!(@call_inner $($args : $types),*));
+            let $return_value = inner($($args),*);
 
             $invariant_block
 
