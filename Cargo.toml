@@ -1,0 +1,6 @@
+[package]
+name = "adhesion"
+version = "0.1.0"
+authors = ["Erich Gubler <erichdongubler@gmail.com>"]
+
+[dependencies]
