@@ -1,6 +1,13 @@
 #[macro_use]
 extern crate adhesion;
 
+macro_rules! assert_panic {
+    ($e: expr) => {
+        let result = ::std::panic::catch_unwind(|| $e);
+        assert!(result.is_err());
+    }
+}
+
 #[test]
 fn happy_path() {
     contract! {
@@ -21,13 +28,6 @@ fn happy_path() {
                 // println!("Running invariant check");
                 assert!(stuff > 5, "invariant violation");
             }
-        }
-    }
-
-    macro_rules! assert_panic {
-        ($e: expr) => {
-            let result = ::std::panic::catch_unwind(|| $e);
-            assert!(result.is_err());
         }
     }
 
