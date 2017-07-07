@@ -4,6 +4,5 @@ An experiment in using macros to do design by contact in Rust. See the [test sui
 
 ## Dependencies
 
-You will need the following to compile this library:
-* Nightly Rust (need the `fn_traits` feature for the current macro implementation)
+*None!* Just grab a stable Rust compiler and you should be good to go! :)
 
