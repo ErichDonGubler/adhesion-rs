@@ -35,7 +35,6 @@ fn happy_path() {
     assert_panic!(asdf(true, 64)); // pre failure
     assert_panic!(asdf(false, 3)); // invariant failure
     asdf(true, 6);
-    asdf(true, 6);
     asdf(false, 7);
     asdf(false, 11);
     asdf(true, 24);
