@@ -1,47 +1,40 @@
 #[macro_use]
 extern crate adhesion;
 
-contract! {
-    fn asdf(asda: bool, stuff: u64) -> bool {
-        pre {
-            // println!("Running pre-condition check");
-            assert!(stuff < 30, "pre-condition violation");
-        }
-        body {
-            // println!("Running body");
-            asda
-        }
-        post(return_value) {
-            // println!("Running post-condition check");
-            assert!(return_value == (stuff % 3 == 0), "post-condition violation");
-        }
-        invariant {
-            // println!("Running invariant check");
-            assert!(stuff > 5, "invariant violation");
+#[test]
+fn happy_path() {
+    contract! {
+        fn asdf(asda: bool, stuff: u64) -> bool {
+            pre {
+                // println!("Running pre-condition check");
+                assert!(stuff < 30, "pre-condition violation");
+            }
+            body {
+                // println!("Running body");
+                asda
+            }
+            post(return_value) {
+                // println!("Running post-condition check");
+                assert!(return_value == (stuff % 3 == 0), "post-condition violation");
+            }
+            invariant {
+                // println!("Running invariant check");
+                assert!(stuff > 5, "invariant violation");
+            }
         }
     }
-}
 
-#[test]
-#[should_panic]
-fn pre_failure() {
-    asdf(true, 64);
-}
+    macro_rules! assert_panic {
+        ($e: expr) => {
+            let result = ::std::panic::catch_unwind(|| $e);
+            assert!(result.is_err());
+        }
+    }
 
-#[test]
-#[should_panic]
-fn invariant_failure() {
-    asdf(false, 3);
-}
-
-#[test]
-#[should_panic]
-fn post_failure() {
-    asdf(true, 7);
-}
-
-#[test]
-fn no_failures() {
+    assert_panic!(asdf(true, 7)); // post failure
+    assert_panic!(asdf(true, 64)); // pre failure
+    assert_panic!(asdf(false, 3)); // invariant failure
+    asdf(true, 6);
     asdf(true, 6);
     asdf(false, 7);
     asdf(false, 11);
@@ -49,7 +42,7 @@ fn no_failures() {
 }
 
 #[test]
-fn out_of_order_is_ok() {
+fn ordering_doesnt_matter() {
     contract! {
         fn sqrt(x: f64) -> f64 {
             body {
