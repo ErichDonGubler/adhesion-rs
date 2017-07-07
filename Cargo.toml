@@ -13,5 +13,6 @@ readme = "README.md"
 repository = "https://github.com/ErichDonGubler/adhesion-rs"
 
 [badges]
-travis-ci = { repository = "https://github.com/ErichDonGubler/adhesion-rs" }
+appveyor = { repository = "ErichDonGubler/adhesion-rs" }
+travis-ci = { repository = "ErichDonGubler/adhesion-rs" }
 
