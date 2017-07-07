@@ -1,6 +1,14 @@
 [package]
 name = "adhesion"
+description = "Design by contract using macros"
 version = "0.1.0"
 authors = ["Erich Gubler <erichdongubler@gmail.com>"]
 
-[dependencies]
+categories = ["algorithms", "development-tools::testing", "rust-patterns"]
+documentation = "https://docs.rs/adhesion"
+include = ["**/*.rs", "Cargo.toml"]
+keywords = ["contract", "design", "invariant"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ErichDonGubler/adhesion-rs"
+
