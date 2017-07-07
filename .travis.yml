@@ -1,0 +1,21 @@
+language: rust
+
+rust:
+  - stable
+  - beta
+  - nightly
+
+matrix:
+  allow_failures:
+    - rust: nightly
+
+script:
+  - cargo test
+
+git:
+  depth: 1
+
+notifications:
+  email:
+    on_success: never
+

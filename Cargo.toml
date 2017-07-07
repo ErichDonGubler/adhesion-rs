@@ -12,3 +12,6 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/ErichDonGubler/adhesion-rs"
 
+[badges]
+travis-ci = { repository = "https://github.com/ErichDonGubler/adhesion-rs" }
+
