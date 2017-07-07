@@ -1,7 +1,7 @@
 [package]
 name = "adhesion"
 description = "A set of macros for design by contact in Rust. The design of this library was inspired by D's contract programming facilities."
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Erich Gubler <erichdongubler@gmail.com>"]
 
 categories = ["algorithms", "development-tools::testing", "rust-patterns"]
