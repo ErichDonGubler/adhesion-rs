@@ -1,6 +1,6 @@
 [package]
 name = "adhesion"
-description = "Design by contract using macros"
+description = "A set of macros for design by contact in Rust. The design of this library was inspired by D's contract programming facilities."
 version = "0.1.0"
 authors = ["Erich Gubler <erichdongubler@gmail.com>"]
 
@@ -16,3 +16,10 @@ repository = "https://github.com/ErichDonGubler/adhesion-rs"
 appveyor = { repository = "ErichDonGubler/adhesion-rs" }
 travis-ci = { repository = "ErichDonGubler/adhesion-rs" }
 
+[build-dependencies]
+skeptic = "0.10.0"
+
+[dev-dependencies]
+galvanic-assert = "0.8.3"
+scan-rules = "0.2.0"
+skeptic = "0.10.0"
