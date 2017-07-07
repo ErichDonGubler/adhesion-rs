@@ -34,7 +34,6 @@ fn invariant_failure() {
     asdf(false, 3);
 }
 
-
 #[test]
 #[should_panic]
 fn post_failure() {
@@ -47,5 +46,21 @@ fn no_failures() {
     asdf(false, 7);
     asdf(false, 11);
     asdf(true, 24);
+}
+
+#[test]
+fn out_of_order_is_ok() {
+    contract! {
+        fn sqrt(x: f64) -> f64 {
+            body {
+                x.sqrt()
+            }
+            post(y) {
+                assert!(x == y * y, "wat!");
+            }
+        }
+    }
+
+    sqrt(25_f64);
 }
 
