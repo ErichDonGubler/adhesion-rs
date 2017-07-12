@@ -9,6 +9,19 @@ macro_rules! assert_panic {
 }
 
 #[test]
+fn most_basic() {
+    contract! {
+        fn asdf() {
+            body {
+                ()
+            }
+        }
+    }
+
+    asdf();
+}
+
+#[test]
 fn happy_path() {
     contract! {
         fn asdf(asda: bool, stuff: u64) -> bool {
