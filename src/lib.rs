@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! contract_processed {
     (
@@ -32,6 +33,7 @@ macro_rules! contract_processed {
     );
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! contract_processing {
     (

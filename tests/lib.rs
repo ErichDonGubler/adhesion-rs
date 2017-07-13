@@ -24,21 +24,18 @@ fn most_basic() {
 #[test]
 fn happy_path() {
     contract! {
-        fn asdf(asda: bool, stuff: u64) -> bool {
+        fn asdf(asda: bool, mut stuff: u64) -> bool {
             pre {
-                // println!("Running pre-condition check");
                 assert!(stuff < 30, "pre-condition violation");
             }
             body {
-                // println!("Running body");
+                stuff += 0;
                 asda
             }
             post(return_value) {
-                // println!("Running post-condition check");
                 assert!(return_value == (stuff % 3 == 0), "post-condition violation");
             }
             invariant {
-                // println!("Running invariant check");
                 assert!(stuff > 5, "invariant violation");
             }
         }
