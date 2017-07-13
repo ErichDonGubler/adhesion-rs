@@ -120,6 +120,51 @@ macro_rules! contract_processing {
     };
 }
 
+/// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions.
+///
+/// No blocks in this macro are required, nor is any specific order required.
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate adhesion;
+/// #
+/// # macro_rules! assert_panic {
+/// #     ($e: expr) => {
+/// #         let result = ::std::panic::catch_unwind(|| $e);
+/// #         assert!(result.is_err());
+/// #     }
+/// # }
+/// #
+/// #
+/// # fn main () {
+/// contract! {
+///     fn asdf(asda: bool, stuff: u64) -> bool {
+///         pre {
+///             assert!(stuff < 30, "pre-condition violation");
+///         }
+///         body {
+///             asda
+///         }
+///         post(return_value) {
+///             assert!(return_value == (stuff % 3 == 0), "post-condition violation");
+///         }
+///         invariant {
+///             assert!(stuff > 5, "invariant violation");
+///         }
+///     }
+/// }
+///
+/// assert_panic!(asdf(true, 7)); // post failure
+/// assert_panic!(asdf(true, 64)); // pre failure
+/// assert_panic!(asdf(false, 3)); // invariant failure
+/// asdf(true, 6);
+/// asdf(false, 7);
+/// asdf(false, 11);
+/// asdf(true, 24);
+/// # }
+/// ```
 #[macro_export]
 macro_rules! contract {
     (
