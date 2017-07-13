@@ -69,3 +69,23 @@ fn ordering_doesnt_matter() {
     sqrt(25_f64);
 }
 
+#[test]
+fn attributes() {
+    contract! {
+        #[cold]
+        fn before() {
+            body {}
+        }
+    }
+
+    before();
+
+    contract! {
+        fn after() {
+            #![cold]
+            body {}
+        }
+    }
+
+    after();
+}
