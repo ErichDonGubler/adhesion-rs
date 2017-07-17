@@ -143,7 +143,6 @@ macro_rules! contract_processing {
 /// # Examples
 ///
 /// ```
-/// # #![feature(trace_macros)]
 /// # #[macro_use]
 /// # extern crate adhesion;
 /// #
@@ -153,8 +152,6 @@ macro_rules! contract_processing {
 /// #         assert!(result.is_err(), concat!("expression \"", stringify!($e), "\" failed to panic"));
 /// #     }
 /// # }
-/// #
-/// # trace_macros!(true);
 /// #
 /// # fn main () {
 /// contract! {
