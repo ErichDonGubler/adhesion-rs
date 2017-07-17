@@ -69,7 +69,7 @@ macro_rules! contract_processing {
         }
     };
     (
-        (pre $pre: tt, body $body: tt, post (def) {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
+        (pre $pre: tt, body $body: tt, post $old_return_value: tt {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
         $(#[$attribute: meta])*
         fn $name: ident $args: tt $( -> $return_type: ty)* {
             post ($return_value: ident) $post: tt
@@ -80,6 +80,22 @@ macro_rules! contract_processing {
             (pre $pre, body $body, post ($return_value) $post, invariant $invariant, $(#![$inner_attribute])*)
             $(#[$attribute])*
             fn $name $args $( -> $return_type)* {
+                $($tail)*
+            }
+        }
+    };
+    (
+        (pre $pre: tt, body $body: tt, post $return_value: tt {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
+        $(#[$attribute: meta])*
+        fn $name: ident ($($args: tt : $types: ty),*)$( -> $return_type: ty)* {
+            post $post: tt
+            $($tail: tt)*
+        }
+    ) => {
+        contract_processing! {
+            (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
+            $(#[$attribute])*
+            fn $name($($args : $types),*)$( -> $return_type)* {
                 $($tail)*
             }
         }
@@ -127,16 +143,18 @@ macro_rules! contract_processing {
 /// # Examples
 ///
 /// ```
+/// # #![feature(trace_macros)]
 /// # #[macro_use]
 /// # extern crate adhesion;
 /// #
 /// # macro_rules! assert_panic {
 /// #     ($e: expr) => {
 /// #         let result = ::std::panic::catch_unwind(|| $e);
-/// #         assert!(result.is_err());
+/// #         assert!(result.is_err(), concat!("expression \"", stringify!($e), "\" failed to panic"));
 /// #     }
 /// # }
 /// #
+/// # trace_macros!(true);
 /// #
 /// # fn main () {
 /// contract! {
