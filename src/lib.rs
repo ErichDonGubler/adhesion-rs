@@ -1,24 +1,3 @@
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! contract_extract_args {
-    (
-        $e: ident, $unrolled_args: tt, ()
-    ) => {
-        $e $unrolled_args
-    };
-    (
-        $e: ident, ($($unrolled_args: tt),*), (mut $arg: ident : $type: ty $(, $($tail: tt)*)*)
-    ) => {
-        contract_extract_args!($e, ($($unrolled_args,)* $arg), ($($($tail)*),*))
-    };
-    (
-        $e: ident, ($($unrolled_args: tt),*), ($arg: ident : $type: ty $(, $($tail: tt)*)*)
-    ) => {
-        contract_extract_args!($e, ($($unrolled_args,)* $arg), ($($($tail)*),*))
-    };
-}
-
 #[doc(hidden)]
 #[macro_export]
 macro_rules! contract_processed {
@@ -39,11 +18,9 @@ macro_rules! contract_processed {
 
             $invariant_block
 
-            fn inner $args $( -> $return_type)* {
+            let $return_value = {
                 $body
-            }
-
-            let $return_value = contract_extract_args!(inner, (), $args);
+            };
 
             $invariant_block
 
@@ -233,4 +210,3 @@ macro_rules! contract {
         }
     };
 }
-

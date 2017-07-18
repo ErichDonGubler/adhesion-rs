@@ -108,3 +108,48 @@ fn mutability() {
         fn mutable_mixed_second(stuff: f64, things: ()) {}
     }
 }
+
+#[test]
+fn structs() {
+    struct TestStruct {
+        var: u32
+    }
+
+    impl TestStruct {
+        contract! {
+            fn eat(self) -> u32 {
+                body {
+                    self.var
+                }
+            }
+        }
+
+        contract! {
+            fn change(&mut self, value: u32) {
+                body {
+                    self.var = value;
+                }
+            }
+        }
+
+        contract! {
+            fn check_out(&self) -> u32 {
+                body {
+                    self.var
+                }
+            }
+        }
+    }
+
+    assert!(TestStruct { var: 4 }.eat() == 4, "var not properly extracted from TestStruct");
+    {
+        let mut t = TestStruct { var: 4 };
+        t.change(26);
+        assert!(t.var == 26, "var not mutated in TestStruct");
+    }
+    {
+        let t = TestStruct { var: 3 };
+        assert!(t.check_out() == 3, "var not properly read from TestStruct");
+        assert!(t.eat() == 3, "var not properly extracted from TestStruct");
+    }
+}
