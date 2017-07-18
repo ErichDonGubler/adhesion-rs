@@ -8,6 +8,11 @@ macro_rules! contract_extract_args {
         $e $unrolled_args
     };
     (
+        $e: ident, ($($unrolled_args: tt),*), (mut $arg: ident : $type: ty $(, $($tail: tt)*)*)
+    ) => {
+        contract_extract_args!($e, ($($unrolled_args,)* $arg), ($($($tail)*),*))
+    };
+    (
         $e: ident, ($($unrolled_args: tt),*), ($arg: ident : $type: ty $(, $($tail: tt)*)*)
     ) => {
         contract_extract_args!($e, ($($unrolled_args,)* $arg), ($($($tail)*),*))

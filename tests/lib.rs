@@ -80,3 +80,31 @@ fn attributes() {
 
     after();
 }
+
+#[test]
+#[allow(unused)]
+fn mutability() {
+    contract! {
+        #[allow(unused)]
+        fn mutable(mut i_am_mutable: String) -> String {
+            body {
+                "wut".to_string()
+            }
+        }
+    }
+
+    contract! {
+        #[allow(unused)]
+        fn mutable_multiple1(mut stuff: u32, mut things: u64) {}
+    }
+
+    contract! {
+        #[allow(unused)]
+        fn mutable_mixed_first(mut stuff: String, things: bool) {}
+    }
+
+    contract! {
+        #[allow(unused)]
+        fn mutable_mixed_second(stuff: f64, things: ()) {}
+    }
+}
