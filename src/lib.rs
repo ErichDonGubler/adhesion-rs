@@ -1,9 +1,25 @@
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! contract_extract_args {
+    (
+        $e: ident, $unrolled_args: tt, ()
+    ) => {
+        $e $unrolled_args
+    };
+    (
+        $e: ident, ($($unrolled_args: tt),*), ($arg: ident : $type: ty $(, $($tail: tt)*)*)
+    ) => {
+        contract_extract_args!($e, ($($unrolled_args,)* $arg), ($($($tail)*),*))
+    };
+}
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! contract_processed {
     (
         $(#[$attribute: meta])*
-        fn $name: ident ($($args: tt : $types: ty),*)$( -> $return_type: ty)* {
+        fn $name: ident $args: tt $( -> $return_type: ty)* {
             $(#![$inner_attribute: meta])*
             pre $pre_body: block
             body $body: block
@@ -12,17 +28,17 @@ macro_rules! contract_processed {
         }
     ) => (
         $(#[$attribute])*
-        fn $name($($args : $types),*)$( -> $return_type)* {
+        fn $name $args $( -> $return_type)* {
             $(#![$inner_attribute])*
             $pre_body
 
             $invariant_block
 
-            fn inner($($args : $types),*)$( -> $return_type)* {
+            fn inner $args $( -> $return_type)* {
                 $body
             }
 
-            let $return_value = inner($($args),*);
+            let $return_value = contract_extract_args!(inner, (), $args);
 
             $invariant_block
 
