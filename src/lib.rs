@@ -2,141 +2,7 @@
 //! found in the README.md and the resources it points to. The easiest way to find it is by looking
 //! through the repo [here](https://github.com/ErichDonGubler/adhesion-rs).
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! contract_processed {
-    (
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            $(#![$inner_attribute: meta])*
-            pre $pre_body: block
-            body $body: block
-            post ($return_value: ident) $post_body: block
-            invariant $invariant_block: block
-        }
-    ) => (
-        $(#[$attribute])*
-        fn $name $args $( -> $return_type)* {
-            $(#![$inner_attribute])*
-            $pre_body
-
-            $invariant_block
-
-            let $return_value = {
-                $body
-            };
-
-            $invariant_block
-
-            $post_body
-
-            $return_value
-        }
-    );
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! contract_processing {
-    (
-        (pre {}, body $body: tt, post $return_value: tt $post: tt, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            pre $pre: block
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processing! {
-           (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($tail)*
-            }
-        }
-    };
-    (
-        (pre $pre: tt, body {}, post $return_value: tt $post: tt, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            body $body: tt
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processing! {
-            (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($tail)*
-            }
-        }
-    };
-    (
-        (pre $pre: tt, body $body: tt, post $old_return_value: tt {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            post ($return_value: ident) $post: tt
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processing! {
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant, $(#![$inner_attribute])*)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($tail)*
-            }
-        }
-    };
-    (
-        (pre $pre: tt, body $body: tt, post $return_value: tt {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            post $post: tt
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processing! {
-            (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($tail)*
-            }
-        }
-    };
-    (
-        (pre $pre: tt, body $body: tt, post $return_value: tt $post: tt, invariant {}, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            invariant $invariant: tt
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processing! {
-            (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($tail)*
-            }
-        }
-    };
-    (
-        (pre $pre: tt, body $body: tt, post $return_value: tt $post: tt, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            $($tail: tt)*
-        }
-    ) => {
-        contract_processed! {
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $(#![$inner_attribute])*
-                pre $pre
-                body $body
-                post $return_value $post
-                invariant $invariant
-            }
-        }
-    };
-}
+mod parse_generics_shim_util;
 
 /// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions. The following blocks are valid:
 ///
@@ -194,31 +60,189 @@ macro_rules! contract_processing {
 macro_rules! contract {
     (
         $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            $(#![$inner_attribute: meta])+
-            $($block_name: ident $(($param: ident))*  { $($block_content: tt)* })*
+        fn $fn_name:ident $($tail:tt)*
+    ) => {
+        parse_generics_shim! {
+            { constr },
+            then contract!(@after_bracket_generics, $(#[$attribute])* $fn_name,),
+            $($tail)*
+        }
+    };
+    (
+        @after_bracket_generics,
+        $(#[$attribute: meta])* $fn_name:ident,
+        {
+            constr: [$($constr: tt)*],
+        },
+        $args: tt $( -> $return_type: ty)* where $($tail: tt)*
+    ) => {
+        parse_where_shim! {
+            { clause, preds },
+            then contract!(
+                @after_where_generics,
+                $(#[$attribute])* $fn_name,
+                {
+                    constr: [$($constr)*],
+                },
+                $args $( -> $return_type)*,
+            ),
+            where $($tail)*
+        }
+    };
+    (
+        @after_bracket_generics,
+        $(#[$attribute: meta])* $fn_name: ident,
+        {
+            constr: [$($constr: tt)*],
+        },
+        $args: tt $( -> $return_type: ty)*
+        {
+            $($block: tt)*
         }
     ) => {
-        contract_processing! {
-            (pre {}, body {}, post (def) {}, invariant {}, $(#![$inner_attribute])+)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($block_name $(($param))* { $($block_content)* })*
+        contract! {
+            @after_where_generics,
+            $(#[$attribute])* $fn_name,
+            {
+                constr: [$($constr)*],
+            },
+            $args $( -> $return_type)*,
+            {
+                clause: [],
+                preds: [],
+            },
+            {
+                $($block)*
             }
         }
     };
     (
-        $(#[$attribute: meta])*
-        fn $name: ident $args: tt $( -> $return_type: ty)* {
-            $($block_name: ident $(($param: ident))*  { $($block_content: tt)* })*
+        @after_where_generics,
+        $(#[$attribute: meta])* $fn_name: ident,
+        {
+            constr: [$($constr: tt)*],
+        },
+        $args: tt $( -> $return_type: ty)*,
+        {
+            clause: [$($where_clause: tt)*],
+            preds: $preds: tt,
+        },
+        {
+            $($block: tt)*
         }
     ) => {
-        contract_processing! {
-            (pre {}, body {}, post (def) {}, invariant {},)
-            $(#[$attribute])*
-            fn $name $args $( -> $return_type)* {
-                $($block_name $(($param))* { $($block_content)* })*
+        fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
+            contract_body! {
+                (pre {}, body {}, post (def) {}, invariant {})
+                $($block)*
             }
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! contract_body {
+    (
+        ($($blocks: tt)*)
+        #![$inner_attribute: meta]
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            ($($blocks)*, #![$inner_attribute])
+            $($tail)*
+        }
+    };
+    (
+        ($($blocks: tt)*)
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            ($($blocks)*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre {}, body $body: tt, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        pre $pre: tt
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre $pre: tt, body {}, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        body $body: tt
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre $pre: tt, body $body: tt, post ($old_return_value: ident) {}, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        post ($return_value: ident) $post: tt
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) {}, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        post $post: tt
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, invariant {} $(, #![$inner_attribute: meta])*)
+        invariant $invariant: tt
+        $($tail: tt)*
+    ) => {
+        contract_body! {
+            @processing_blocks
+            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            $($tail)*
+        }
+    };
+    (
+        @processing_blocks
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+    ) => {
+        {
+            $(#![$inner_attribute])*
+            $pre
+
+            $invariant
+
+            let $return_value = {
+                $body
+            };
+
+            $invariant
+
+            $post
+
+            $return_value
         }
     };
 }

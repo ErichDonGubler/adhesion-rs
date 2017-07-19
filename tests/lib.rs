@@ -153,3 +153,32 @@ fn structs() {
         assert!(t.eat() == 3, "var not properly extracted from TestStruct");
     }
 }
+
+#[test]
+fn generics() {
+    contract! {
+        fn add_together1<T: ::std::ops::Add>(left: T, right: T) -> <T as std::ops::Add>::Output {
+            pre {}
+            body {
+                left + right
+            }
+            post (def) {}
+            invariant {}
+        }
+    }
+
+    assert!(add_together1(2, 4) == 6, "add impl broken (!?)");
+
+    contract! {
+        fn add_together2<T>(left: T, right: T) -> T::Output where T: ::std::ops::Add {
+            pre {}
+            body {
+                left + right
+            }
+            post (def) {}
+            invariant {}
+        }
+    }
+
+    assert!(add_together2(2, 4) == 6, "add impl broken (!?)");
+}

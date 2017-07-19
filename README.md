@@ -79,10 +79,7 @@ More examples can be found in:
 
 ## Current Limitations
 
-There are only two known limitations at the time of writing, both of which are planned to be lifted:
-
-1. Inability to use function-specific generics (see issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/18) -- help welcome!)
-2. Inability to use more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15))
+The only major known limitation at the time of writing is the inability to use more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15)). This limitation is planned to be lifted.
 
 ## Why "Adhesion"?
 
@@ -90,10 +87,11 @@ This library is called "Adhesion" in reference to a particular type of contract 
 
 ## Licensing
 
-[MIT license](/LICENSE-MIT)
+This project is dual-licensed under your choice of the [MIT license](/LICENSE-MIT) or the [Apache 2.0 license](/LICENSE-APACHE-2.0).
+* Adhesion uses a modified version of components from the [rust-parse-generics](https://github.com/DanielKeep/rust-parse-generics) project. Both the original and modified versions here use the same dual license as this project.
 
 ## Contributors
 
 * @ErichDonGubler, original author
-* @dzamlo
-
+* @dzamlo, for providing assistance with various important features.
+* @DanielKeep, for his incredible help making it possible for generics to be parsed and used in macros generally, and for his mentoring during Adhesion's development of its features involving generics.
