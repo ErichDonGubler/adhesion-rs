@@ -1,3 +1,7 @@
+//! This crate's formal documentation is under construction! The best documentation is currently
+//! found in the README.md and the resources it points to. The easiest way to find it is by looking
+//! through the repo [here](https://github.com/ErichDonGubler/adhesion-rs).
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! contract_processed {
