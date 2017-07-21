@@ -88,6 +88,10 @@ There are only two known limitations at the time of writing, both of which are p
 
 This library is called "Adhesion" in reference to a particular type of contract called a "contract of adhesion", also known as a "take-it-or-leave-it" contract. Assertions in programming are definitely "take it or leave it" -- if an assertion is failing, you either have to fix the conditions of the assertion, or change the assertion itself. It sounded appropriate!
 
+## Licensing
+
+[MIT license](/LICENSE-MIT)
+
 ## Contributors
 
 * @ErichDonGubler, original author
