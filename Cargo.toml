@@ -6,7 +6,7 @@ authors = ["Erich Gubler <erichdongubler@gmail.com>"]
 
 categories = ["algorithms", "development-tools::testing", "rust-patterns"]
 documentation = "https://docs.rs/adhesion"
-include = ["**/*.rs", "Cargo.toml", "README.md", "LICENSE-MIT"]
+include = ["**/*.rs", "Cargo.toml", "README.md", "README.md.skt.md", "LICENSE-MIT"]
 keywords = ["contract", "design", "invariant"]
 license = "MIT"
 readme = "README.md"
