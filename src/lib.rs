@@ -147,13 +147,8 @@ macro_rules! contract_processing {
 /// ```
 /// # #[macro_use]
 /// # extern crate adhesion;
-/// #
-/// # macro_rules! assert_panic {
-/// #     ($e: expr) => {
-/// #         let result = ::std::panic::catch_unwind(|| $e);
-/// #         assert!(result.is_err(), concat!("expression \"", stringify!($e), "\" failed to panic"));
-/// #     }
-/// # }
+/// # #[macro_use]
+/// # extern crate galvanic_assert;
 /// #
 /// # fn main () {
 /// contract! {
@@ -173,9 +168,9 @@ macro_rules! contract_processing {
 ///     }
 /// }
 ///
-/// assert_panic!(asdf(true, 7)); // post failure
-/// assert_panic!(asdf(true, 64)); // pre failure
-/// assert_panic!(asdf(false, 3)); // invariant failure
+/// assert_that!(asdf(true, 7), panics); // post failure
+/// assert_that!(asdf(true, 64), panics); // pre failure
+/// assert_that!(asdf(false, 3), panics); // invariant failure
 /// asdf(true, 6);
 /// asdf(false, 7);
 /// asdf(false, 11);
