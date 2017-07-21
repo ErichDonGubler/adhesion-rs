@@ -16,9 +16,6 @@ repository = "https://github.com/ErichDonGubler/adhesion-rs"
 appveyor = { repository = "ErichDonGubler/adhesion-rs" }
 travis-ci = { repository = "ErichDonGubler/adhesion-rs" }
 
-[build-dependencies]
-skeptic = "0.10.0"
-
 [dev-dependencies]
 galvanic-assert = "0.8.3"
 scan-rules = "0.2.0"
