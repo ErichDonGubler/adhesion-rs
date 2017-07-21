@@ -2,7 +2,8 @@
 
 [![Linux build status](https://travis-ci.org/ErichDonGubler/adhesion-rs.svg)](https://travis-ci.org/ErichDonGubler/adhesion-rs)
 [![Windows build status](https://ci.appveyor.com/api/projects/status/github/ErichDonGubler/adhesion-rs?svg=true)](https://ci.appveyor.com/project/ErichDonGubler/adhesion-rs)
-[![crates.io version](https://img.shields.io/crates/v/adhesion.svg)](https://crates.io/crates/adhesion)
+[![crates.io latest published version](https://img.shields.io/crates/v/adhesion.svg)](https://crates.io/crates/adhesion)
+[![docs.rs latest published version](https://docs.rs/adhesion/badge.svg)](https://docs.rs/adhesion)
 
 A set of macros for [design by contact](https://en.wikipedia.org/wiki/Design_by_contract) in Rust. The design of this library was inspired by [D's contract programming facilities](https://tour.dlang.org/tour/en/gems/contract-programming). Here's a quick example:
 
