@@ -77,6 +77,13 @@ More examples can be found in:
 * The [examples directory](/examples)
 * The [test suite](/tests/lib.rs) for this library
 
+## Current Limitations
+
+There are only two known limitations at the time of writing, both of which are planned to be lifted:
+
+1. Inability to use function-specific generics (see issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/18) -- help welcome!)
+2. Inability to use more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15))
+
 ## Why "Adhesion"?
 
 This library is called "Adhesion" in reference to a particular type of contract called a "contract of adhesion", also known as a "take-it-or-leave-it" contract. Assertions in programming are definitely "take it or leave it" -- if an assertion is failing, you either have to fix the conditions of the assertion, or change the assertion itself. It sounded appropriate!
