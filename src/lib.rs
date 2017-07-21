@@ -138,7 +138,19 @@ macro_rules! contract_processing {
     };
 }
 
-/// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions.
+/// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions. The following blocks are valid:
+/// 1. `pre` -- runs once before `body`.
+/// 2. `body` -- the main part of the function. This is the reason the function exists!
+/// 3. `post` -- runs once after `body`.
+/// 5. `invariant` -- runs twice; before `pre`, and after `post`.
+///
+/// When every contract block is being utilized, the final order of the checks inserted into the contract definition are as follows:
+///
+/// 1. `pre`
+/// 2. `invariant`
+/// 3. `body`
+/// 4. `invariant`
+/// 5. `post`
 ///
 /// No blocks in this macro are required, nor is any specific order required.
 ///
