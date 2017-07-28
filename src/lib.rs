@@ -89,7 +89,7 @@ macro_rules! contract_processing {
     (
         (pre $pre: tt, body $body: tt, post $return_value: tt {}, invariant $invariant: tt, $(#![$inner_attribute: meta])*)
         $(#[$attribute: meta])*
-        fn $name: ident ($($args: tt : $types: ty),*)$( -> $return_type: ty)* {
+        fn $name: ident $args: tt $( -> $return_type: ty)* {
             post $post: tt
             $($tail: tt)*
         }
@@ -97,7 +97,7 @@ macro_rules! contract_processing {
         contract_processing! {
             (pre $pre, body $body, post $return_value $post, invariant $invariant, $(#![$inner_attribute])*)
             $(#[$attribute])*
-            fn $name($($args : $types),*)$( -> $return_type)* {
+            fn $name $args $( -> $return_type)* {
                 $($tail)*
             }
         }
