@@ -2,7 +2,7 @@
 //! found in the README.md and the resources it points to. The easiest way to find it is by looking
 //! through the repo [here](https://github.com/ErichDonGubler/adhesion-rs).
 
-mod parse_generics_shim_util;
+pub mod parse_generics_shim_util;
 
 /// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions. The following blocks are valid:
 ///
