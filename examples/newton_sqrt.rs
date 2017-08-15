@@ -51,14 +51,13 @@ contract! {
                 println!("  Iteration {}: {}", i, current);
 
                 if current.is_nan() || current.is_within_precision_of(previous, precision) {
-                    break;
+                    break current;
                 }
 
                 previous = current;
 
                 i += 1;
             }
-            current
         }
     }
 }
