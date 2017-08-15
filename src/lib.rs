@@ -59,18 +59,28 @@ mod parse_generics_shim_util;
 #[macro_export]
 macro_rules! contract {
     (
+        #[$attribute: meta]
+        fn $fn_name:ident $($tail:tt)*
+    ) => {
+        parse_generics_shim! {
+            { constr },
+            then contract!(@after_bracket_generics, #[$attribute], $fn_name,),
+            $($tail)*
+        }
+    };
+    (
         $(#[$attribute: meta])*
         fn $fn_name:ident $($tail:tt)*
     ) => {
         parse_generics_shim! {
             { constr },
-            then contract!(@after_bracket_generics, $(#[$attribute])* $fn_name,),
+            then contract!(@after_bracket_generics, , $fn_name,),
             $($tail)*
         }
     };
     (
         @after_bracket_generics,
-        $(#[$attribute: meta])* $fn_name:ident,
+        $(#[$attribute: meta])*, $fn_name:ident,
         {
             constr: [$($constr: tt)*],
         },
@@ -80,7 +90,7 @@ macro_rules! contract {
             { clause, preds },
             then contract!(
                 @after_where_generics,
-                $(#[$attribute])* $fn_name,
+                $(#[$attribute])*, $fn_name,
                 {
                     constr: [$($constr)*],
                 },
@@ -91,7 +101,7 @@ macro_rules! contract {
     };
     (
         @after_bracket_generics,
-        $(#[$attribute: meta])* $fn_name: ident,
+        $(#[$attribute: meta])*, $fn_name: ident,
         {
             constr: [$($constr: tt)*],
         },
@@ -102,7 +112,7 @@ macro_rules! contract {
     ) => {
         contract! {
             @after_where_generics,
-            $(#[$attribute])* $fn_name,
+            $(#[$attribute])*, $fn_name,
             {
                 constr: [$($constr)*],
             },
@@ -118,7 +128,7 @@ macro_rules! contract {
     };
     (
         @after_where_generics,
-        $(#[$attribute: meta])* $fn_name: ident,
+        $(#[$attribute: meta])*, $fn_name: ident,
         {
             constr: [$($constr: tt)*],
         },
@@ -131,6 +141,7 @@ macro_rules! contract {
             $($block: tt)*
         }
     ) => {
+        $(#[$attribute])*
         fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
             contract_body! {
                 (pre {}, body {}, post (def) {}, invariant {})
