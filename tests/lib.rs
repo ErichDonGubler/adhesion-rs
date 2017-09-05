@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate adhesion;
+#[macro_use]
+extern crate galvanic_assert;
 
 #[test]
 fn most_basic() {
@@ -152,6 +154,57 @@ fn structs() {
         assert!(t.check_out() == 3, "var not properly read from TestStruct");
         assert!(t.eat() == 3, "var not properly extracted from TestStruct");
     }
+
+    struct Counter {
+        count: u64
+    }
+
+    impl Counter {
+        contract! {
+            fn new() -> Counter {
+                body {
+                    Counter {
+                        count: 0
+                    }
+                }
+            }
+
+            fn increment(&mut self) {
+                pre {
+                    assert!(self.count != u64::max_value(), "cannot increment counter with max value");
+                }
+                body {
+                    self.count += 1;
+                }
+            }
+
+            fn decrement(&mut self) {
+                pre {
+                    assert!(self.count != 0, "cannot decrement counter with count of 0");
+                }
+                body {
+                    self.count -= 1;
+                }
+            }
+
+            fn borrow_count(&self) -> &u64 {
+                body {
+                    &self.count
+                }
+            }
+
+            fn consume(self) -> u64 {
+                body {
+                    self.count
+                }
+            }
+        }
+    }
+
+    assert_that!(Counter{ count: u64::max_value() }.increment(), panics);
+    assert_that!(Counter{ count: 0 }.decrement(), panics);
+    assert!(Counter::new().borrow_count() == &0);
+    assert!(Counter::new().consume() == 0);
 }
 
 #[test]

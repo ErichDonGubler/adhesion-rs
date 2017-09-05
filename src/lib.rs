@@ -67,7 +67,7 @@ mod parse_generics_shim_util;
 macro_rules! contract {
     (
         $(#[$attribute: meta])*
-        fn $fn_name:ident $($tail:tt)*
+        fn $fn_name: ident $($tail: tt)*
     ) => {
         parse_generics_shim! {
             { constr },
@@ -77,7 +77,7 @@ macro_rules! contract {
     };
     (
         @after_bracket_generics,
-        $(#[$attribute: meta])* $fn_name:ident,
+        $(#[$attribute: meta])* $fn_name: ident,
         {
             constr: [$($constr: tt)*],
         },
@@ -106,6 +106,7 @@ macro_rules! contract {
         {
             $($block: tt)*
         }
+        $($tail: tt)*
     ) => {
         contract! {
             @after_where_generics,
@@ -121,6 +122,7 @@ macro_rules! contract {
             {
                 $($block)*
             }
+            $($tail)*
         }
     };
     (
@@ -137,13 +139,24 @@ macro_rules! contract {
         {
             $($block: tt)*
         }
+        $($tail: tt)*
     ) => {
-        fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
+        $(#[$attribute])* fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
             contract_body! {
                 (pre {}, body {}, post (def) {}, invariant {})
                 $($block)*
             }
         }
+        contract!{ @repeat $($tail)* }
+    };
+    (
+        @repeat
+    ) => {};
+    (
+        @repeat
+        $($tail: tt)+
+    ) => {
+        contract!{ $($tail)+ }
     };
 }
 
