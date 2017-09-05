@@ -161,7 +161,7 @@ fn structs() {
 
     impl Counter {
         contract! {
-            fn new() -> Counter {
+            pub fn new() -> Counter {
                 body {
                     Counter {
                         count: 0
@@ -169,7 +169,7 @@ fn structs() {
                 }
             }
 
-            fn increment(&mut self) {
+            pub fn increment(&mut self) {
                 pre {
                     assert!(self.count != u64::max_value(), "cannot increment counter with max value");
                 }
@@ -178,7 +178,7 @@ fn structs() {
                 }
             }
 
-            fn decrement(&mut self) {
+            pub fn decrement(&mut self) {
                 pre {
                     assert!(self.count != 0, "cannot decrement counter with count of 0");
                 }
@@ -187,13 +187,13 @@ fn structs() {
                 }
             }
 
-            fn borrow_count(&self) -> &u64 {
+            pub fn borrow_count(&self) -> &u64 {
                 body {
                     &self.count
                 }
             }
 
-            fn consume(self) -> u64 {
+            pub fn consume(self) -> u64 {
                 body {
                     self.count
                 }
@@ -234,4 +234,17 @@ fn generics() {
     }
 
     assert!(add_together2(2, 4) == 6, "add impl broken (!?)");
+}
+
+#[test]
+fn visibility() {
+    contract! {
+        fn no_pub() {}
+        pub fn just_pub() {}
+        pub(crate) fn pub_crate() {}
+    }
+
+    no_pub();
+    just_pub();
+    pub_crate();
 }
