@@ -84,12 +84,6 @@ More examples can be found in:
 * The [examples directory](/examples)
 * The [test suite](/tests/lib.rs) for this library
 
-## Current Limitations
-
-The only major known limitation at the time of writing is the inability to us
-e more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15)
-). This limitation is planned to be lifted.
-
 ## Why "Adhesion"?
 
 This library is called "Adhesion" in reference to a particular type of contract
