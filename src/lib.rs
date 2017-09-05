@@ -250,13 +250,12 @@ macro_rules! contract_body {
     ) => {
         {
             $(#![$inner_attribute])*
+
             $pre
 
             $invariant
 
-            let $return_value = {
-                $body
-            };
+            let $return_value = $body;
 
             $invariant
 
