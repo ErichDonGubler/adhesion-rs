@@ -9,8 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+* Contracts now accept more than one `fn` definition, which is MUCH more
+    ergonomic for public interfaces in structs and traits.
 * Updated some code to use macro fixes that landed in Rust 1.20. This makes the
     code cleaner!
+
+### Fixed
+
+* Visibility modifiers (`pub` and its variants) were not accepted before this
+    point. Now they are.
 
 ## [0.3.0] - 2017-08-15
 
