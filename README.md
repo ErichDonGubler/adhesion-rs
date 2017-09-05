@@ -5,7 +5,10 @@
 [![crates.io latest published version](https://img.shields.io/crates/v/adhesion.svg)](https://crates.io/crates/adhesion)
 [![docs.rs latest published version](https://docs.rs/adhesion/badge.svg)](https://docs.rs/adhesion)
 
-A set of macros for [design by contact](https://en.wikipedia.org/wiki/Design_by_contract) in Rust. The design of this library was inspired by [D's contract programming facilities](https://tour.dlang.org/tour/en/gems/contract-programming). Here's a quick example:
+A set of macros for [design by contact](https://en.wikipedia.org/wiki/Design_by_contract)
+in Rust. The design of this library was inspired by [D's contract programming
+facilities](https://tour.dlang.org/tour/en/gems/contract-programming).
+Here's a quick example:
 
 ```rust,skt-main
 use std::i32;
@@ -31,7 +34,10 @@ assert_that!(add_one_to_odd(2), panics);
 assert_that!(add_one_to_odd(i32::MAX), panics);
 ```
 
-In the above example, `pre` runs before `body`, and `post`, which has the return value of this function bound to `y`, runs after. We can also define invariants with the `invariant` block, which will be checked before **and** after `body` has run:
+In the above example, `pre` runs before `body`, and `post`, which has the
+return value of this function bound to `y`, runs after. We can also define
+invariants with the `invariant` block, which will be checked before **and**
+after `body` has run:
 
 ```rust,should_panic,skt-main
 struct Counter {
@@ -65,7 +71,8 @@ assert_incremented_eq!(3);
 assert_incremented_eq!(4); // panics!
 ```
 
-When every contract block is being utilized, the order of the checks inserted into the contract definition are as follows:
+When every contract block is being utilized, the order of the checks inserted
+into the contract definition are as follows:
 
 1. `pre`
 2. `invariant`
@@ -79,19 +86,30 @@ More examples can be found in:
 
 ## Current Limitations
 
-The only major known limitation at the time of writing is the inability to use more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15)). This limitation is planned to be lifted.
+The only major known limitation at the time of writing is the inability to us
+e more than a single function inside a single `contract!` block (issue [here](https://github.com/ErichDonGubler/adhesion-rs/issues/15)
+). This limitation is planned to be lifted.
 
 ## Why "Adhesion"?
 
-This library is called "Adhesion" in reference to a particular type of contract called a "contract of adhesion", also known as a "take-it-or-leave-it" contract. Assertions in programming are definitely "take it or leave it" -- if an assertion is failing, you either have to fix the conditions of the assertion, or change the assertion itself. It sounded appropriate!
+This library is called "Adhesion" in reference to a particular type of contract
+called a "contract of adhesion", also known as a "take-it-or-leave-it"
+contract. Assertions in programming are definitely "take it or leave it" -- if
+an assertion is failing, you either have to fix the conditions of the
+assertion, or change the assertion itself. It sounded appropriate!
 
 ## Licensing
 
-This project is dual-licensed under your choice of the [MIT license](/LICENSE-MIT) or the [Apache 2.0 license](/LICENSE-APACHE-2.0).
-* Adhesion uses a modified version of components from the [rust-parse-generics](https://github.com/DanielKeep/rust-parse-generics) project. Both the original and modified versions here use the same dual license as this project.
+This project is dual-licensed under your choice of the [MIT license](/LICENSE-MIT)
+or the [Apache 2.0 license](/LICENSE-APACHE-2.0).
+* Adhesion uses a modified version of components from the [rust-parse-generics](https://github.com/DanielKeep/rust-parse-generics)
+    project. Both the original and modified versions here use the same dual
+    license as this project.
 
 ## Contributors
 
 * @ErichDonGubler, original author
 * @dzamlo, for providing assistance with various important features.
-* @DanielKeep, for his incredible help making it possible for generics to be parsed and used in macros generally, and for his mentoring during Adhesion's development of its features involving generics.
+* @DanielKeep, for his incredible help making it possible for generics to be
+    parsed and used in macros generally, and for his mentoring during
+    Adhesion's development of its features involving generics.

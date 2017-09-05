@@ -1,17 +1,24 @@
-//! This crate's formal documentation is under construction! The best documentation is currently
-//! found in the README.md and the resources it points to. The easiest way to find it is by looking
-//! through the repo [here](https://github.com/ErichDonGubler/adhesion-rs).
+//! As the purpose of this crate is to expose the `contract` macro, see [its
+//! documentation](./macro.contract.html). You may also be interested in checking out:
+//!
+//! * The README.md in source, most easily viewed at Github
+//!     [here](https://github.com/ErichDonGubler/adhesion-rs)
+//! * This crate's [example files](https://github.com/ErichDonGubler/adhesion-rs/tree/master/examples)
+//! * This crate's [test suite](https://github.com/ErichDonGubler/adhesion-rs/tree/master/tests)
 
 mod parse_generics_shim_util;
 
-/// Converts a `fn` definition inside to be a contracted function, complete with invariant, pre-, and post-conditions. The following blocks are valid:
+/// Converts a `fn` definition inside to be a contracted function, complete
+/// with invariant, pre-, and post-conditions. The following blocks are valid:
 ///
 /// 1. `pre` -- runs once before `body`.
-/// 2. `body` -- the main part of the function. This is the reason the function exists!
+/// 2. `body` -- the main part of the function. This is the reason the function
+///     exists!
 /// 3. `post` -- runs once after `body`.
 /// 5. `invariant` -- runs twice; before `pre`, and after `post`.
 ///
-/// When every contract block is being utilized, the final order of the checks inserted into the contract definition are as follows:
+/// When every contract block is being utilized, the final order of the checks
+/// inserted into the contract definition are as follows:
 ///
 /// 1. `pre`
 /// 2. `invariant`
