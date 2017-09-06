@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
     ergonomic for public interfaces in structs and traits.
 * Updated some code to use macro fixes that landed in Rust 1.20. This makes the
     code cleaner!
+* A code of conduct (see CONTRIBUTING.md) adapted from the Contributor Covenant 1.4.
 
 ### Fixed
 
