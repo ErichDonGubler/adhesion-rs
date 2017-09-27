@@ -216,7 +216,7 @@ fn generics() {
                 left + right
             }
             post (def) {}
-            invariant {}
+            double_check {}
         }
     }
 
@@ -229,7 +229,7 @@ fn generics() {
                 left + right
             }
             post (def) {}
-            invariant {}
+            double_check {}
         }
     }
 

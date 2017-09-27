@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changes
+
+* *BREAKING*: The `invariant` block has now been renamed to `double_check` ([
+    issue #24](https://github.com/ErichDonGubler/adhesion-rs/issues/24))
+    . The [README](https://github.com/ErichDonGubler/adhesion-rs/blob/v0.4.0/README.md)
+    has been updated to explain why this library now diverges from its original
+    inspiration in D.
+
 ### Added
 
 * Contracts now accept more than one `fn` definition, which is MUCH more

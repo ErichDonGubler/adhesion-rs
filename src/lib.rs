@@ -8,22 +8,22 @@
 
 mod parse_generics_shim_util;
 
-/// Converts a `fn` definition inside to be a contracted function, complete
-/// with invariant, pre-, and post-conditions. The following blocks are valid:
+/// Converts a `fn` definition inside to be a contracted function that may have
+/// pre- and post-condition checks. The following blocks are valid:
 ///
 /// 1. `pre` -- runs once before `body`.
 /// 2. `body` -- the main part of the function. This is the reason the function
 ///     exists!
 /// 3. `post` -- runs once after `body`.
-/// 5. `invariant` -- runs twice; before `pre`, and after `post`.
+/// 5. `double_check` -- runs twice; after `pre`, and before `post`.
 ///
 /// When every contract block is being utilized, the final order of the checks
 /// inserted into the contract definition are as follows:
 ///
 /// 1. `pre`
-/// 2. `invariant`
+/// 2. `double_check`
 /// 3. `body`
-/// 4. `invariant`
+/// 4. `double_check`
 /// 5. `post`
 ///
 /// No blocks in this macro are required, nor is any specific order required.
@@ -48,15 +48,15 @@ mod parse_generics_shim_util;
 ///         post(return_value) {
 ///             assert!(return_value == (stuff % 3 == 0), "post-condition violation");
 ///         }
-///         invariant {
-///             assert!(stuff > 5, "invariant violation");
+///         double_check {
+///             assert!(stuff > 5, "double_check violation");
 ///         }
 ///     }
 /// }
 ///
 /// assert_that!(asdf(true, 7), panics); // post failure
 /// assert_that!(asdf(true, 64), panics); // pre failure
-/// assert_that!(asdf(false, 3), panics); // invariant failure
+/// assert_that!(asdf(false, 3), panics); // double_check failure
 /// asdf(true, 6);
 /// asdf(false, 7);
 /// asdf(false, 11);
@@ -143,7 +143,7 @@ macro_rules! contract {
     ) => {
         $(#[$attribute])* $(pub$(($access_modifier))*)* fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
             contract_body! {
-                (pre {}, body {}, post (def) {}, invariant {})
+                (pre {}, body {}, post (def) {}, double_check {})
                 $($block)*
             }
         }
@@ -186,78 +186,78 @@ macro_rules! contract_body {
     };
     (
         @processing_blocks
-        (pre {}, body $body: tt, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        (pre {}, body $body: tt, post ($return_value: ident) $post: tt, double_check $double_check: tt $(, #![$inner_attribute: meta])*)
         pre $pre: tt
         $($tail: tt)*
     ) => {
         contract_body! {
             @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            (pre $pre, body $body, post ($return_value) $post, double_check $double_check $(, #![$inner_attribute])*)
             $($tail)*
         }
     };
     (
         @processing_blocks
-        (pre $pre: tt, body {}, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        (pre $pre: tt, body {}, post ($return_value: ident) $post: tt, double_check $double_check: tt $(, #![$inner_attribute: meta])*)
         body $body: tt
         $($tail: tt)*
     ) => {
         contract_body! {
             @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            (pre $pre, body $body, post ($return_value) $post, double_check $double_check $(, #![$inner_attribute])*)
             $($tail)*
         }
     };
     (
         @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($old_return_value: ident) {}, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        (pre $pre: tt, body $body: tt, post ($old_return_value: ident) {}, double_check $double_check: tt $(, #![$inner_attribute: meta])*)
         post ($return_value: ident) $post: tt
         $($tail: tt)*
     ) => {
         contract_body! {
             @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            (pre $pre, body $body, post ($return_value) $post, double_check $double_check $(, #![$inner_attribute])*)
             $($tail)*
         }
     };
     (
         @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) {}, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) {}, double_check $double_check: tt $(, #![$inner_attribute: meta])*)
         post $post: tt
         $($tail: tt)*
     ) => {
         contract_body! {
             @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            (pre $pre, body $body, post ($return_value) $post, double_check $double_check $(, #![$inner_attribute])*)
             $($tail)*
         }
     };
     (
         @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, invariant {} $(, #![$inner_attribute: meta])*)
-        invariant $invariant: tt
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, double_check {} $(, #![$inner_attribute: meta])*)
+        double_check $double_check: tt
         $($tail: tt)*
     ) => {
         contract_body! {
             @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, invariant $invariant $(, #![$inner_attribute])*)
+            (pre $pre, body $body, post ($return_value) $post, double_check $double_check $(, #![$inner_attribute])*)
             $($tail)*
         }
     };
     (
         @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, invariant $invariant: tt $(, #![$inner_attribute: meta])*)
+        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, double_check $double_check: tt $(, #![$inner_attribute: meta])*)
     ) => {
         {
             $(#![$inner_attribute])*
 
             $pre
 
-            $invariant
+            $double_check
 
             let $return_value = $body;
 
-            $invariant
+            $double_check
 
             $post
 
