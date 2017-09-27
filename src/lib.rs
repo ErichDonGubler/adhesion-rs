@@ -9,8 +9,8 @@
 
 mod parse_generics_shim_util;
 
-/// Converts a `fn` definition inside to be a contracted function that may have
-/// pre- and post-condition checks. The following blocks are valid:
+/// Converts one or more `fn` definitions inside to be contracted functions that
+/// may have pre- and post-condition checks. The following blocks are valid:
 ///
 /// 1. `pre` -- runs once before `body`.
 /// 2. `body` -- the main part of the function. This is the reason the function
