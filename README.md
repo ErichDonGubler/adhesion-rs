@@ -112,6 +112,7 @@ combined pre- and post-check block that D calls `invariant` is called
 
 This project is dual-licensed under your choice of the [MIT license](/LICENSE-MIT)
 or the [Apache 2.0 license](/LICENSE-APACHE-2.0).
+
 * Adhesion uses a modified version of components from the [rust-parse-generics](https://github.com/DanielKeep/rust-parse-generics)
     project. Both the original and modified versions here use the same dual
     license as this project.

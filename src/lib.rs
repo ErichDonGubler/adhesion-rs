@@ -1,5 +1,6 @@
 //! As the purpose of this crate is to expose the `contract` macro, see [its
-//! documentation](./macro.contract.html). You may also be interested in checking out:
+//! documentation](./macro.contract.html). You may also be interested in
+//! checking out:
 //!
 //! * The README.md in source, most easily viewed at Github
 //!     [here](https://github.com/ErichDonGubler/adhesion-rs)
