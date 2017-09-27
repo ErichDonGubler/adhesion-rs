@@ -18,16 +18,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-* Contracts now accept more than one `fn` definition, which is MUCH more
-    ergonomic for public interfaces in structs and traits.
-* Updated some code to use macro fixes that landed in Rust 1.20. This makes the
-    code cleaner!
-* A code of conduct (see CONTRIBUTING.md) adapted from the Contributor Covenant 1.4.
+* Contracts [now accept more than one `fn` definition](https://github.com/ErichDonGubler/adhesion-rs/issues/17)
+    , which is MUCH more ergonomic for public interfaces in structs and traits.
+* A code of conduct (see `CONTRIBUTING.md`) adapted from the Contributor
+    Covenant 1.4.
 
 ### Fixed
 
 * Visibility modifiers (`pub` and its variants) were not accepted before this
-    point. Now they are.
+    point. [Now they are](https://github.com/ErichDonGubler/adhesion-rs/issues/29)
+    .
 
 ## [0.3.0] - 2017-08-15
 
