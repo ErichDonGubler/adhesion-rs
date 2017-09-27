@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 This just in: generics are now supported in Adhesion! With the help of macros
 drawn from the [`parse-generics-shim` crate](https://crates.io/crates/parse-generics-shim),
 you can now write functions kind of like the ones you can find in the [new
-tests](https://github.com/ErichDonGubler/adhesion-rs/blob/master/tests/lib.rs#L158)
+tests](https://github.com/ErichDonGubler/adhesion-rs/blob/v0.3.0/tests/lib.rs#L158)
 associated with this release:
 
 ```rust
@@ -51,7 +51,7 @@ contract! {
 }
 ```
 
-There are some [limitations](https://docs.rs/parse-generics-shim/*/parse_generics_shim/index.html)
+There are some [limitations](https://docs.rs/parse-generics-shim/0.1.1/parse_generics_shim/index.html)
 associated with the current handling of generics in macros, but they should
 accommodate a majority of use cases until a better solution is provided by Rust
 itself for generics parsing in macros.
