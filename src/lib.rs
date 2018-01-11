@@ -7,6 +7,7 @@
 //! * This crate's [example files](https://github.com/ErichDonGubler/adhesion-rs/tree/master/examples)
 //! * This crate's [test suite](https://github.com/ErichDonGubler/adhesion-rs/tree/master/tests)
 #![deny(missing_docs)]
+#![doc(html_root_url = "https://docs.rs/adhesion/0.4.0")]
 
 mod parse_generics_shim_util;
 
