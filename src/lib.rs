@@ -30,6 +30,10 @@ mod parse_generics_shim_util;
 ///
 /// No blocks in this macro are required, nor is any specific order required.
 ///
+/// It should be noted that conditional compilation is NOT handled by this
+/// library, and that if conditional compilation is desired, [`cfg` statements](https://doc.rust-lang.org/beta/reference/attributes.html#conditional-compilation)
+/// should be used like with any most other Rust code.
+///
 /// # Examples
 ///
 /// ```

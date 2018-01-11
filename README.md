@@ -84,6 +84,10 @@ More examples can be found in:
 * The [examples directory](/examples)
 * The [test suite](/tests/lib.rs) for this library
 
+It should be noted that conditional compilation is NOT handled by this
+library, and that if conditional compilation is desired, [`cfg` statements](https://doc.rust-lang.org/beta/reference/attributes.html#conditional-compilation)
+should be used like with any most other Rust code.
+
 ## FAQ
 
 ### Why "Adhesion"?
