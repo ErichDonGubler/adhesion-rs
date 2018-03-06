@@ -6,6 +6,43 @@ This format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
 .
 
+## [0.5.0] - 2018-03-06
+
+### Added
+
+* `contract!` invocations now accept a top-level `double-check` block, which
+    facilitates the use case where you want to make sure a `struct`'s
+    invariants are held across a certain set of methods:
+
+    ```rust
+    struct Counter {
+        count: u32,
+        max: u32,
+    }
+
+    impl Counter {
+        contract! {
+            double_check {
+                assert!(self.count <= self.max);
+            }
+
+            fn tick_up(&mut self) {
+                body {
+                    // Force a panic if this overflows, even in release
+                    self.count = self.count.checked_add(1).unwrap();
+                }
+            }
+
+            fn tick_down(&mut self) {
+                body {
+                    // Force a panic if this underflows, even in release
+                    self.count = self.count.checked_sub(1).unwrap();
+                }
+            }
+        }
+    }
+    ```
+
 ## [0.4.0] - 2017-09-27
 
 ### Changes
@@ -157,6 +194,8 @@ come over the course of the next month as time allows.
     made by @brson, which lets you include tests in Markdown documents like the
     examples in the README written in this release.
 
-[Unreleased]: https://github.com/erichdongubler/adhesion-rs/compare/v0.3.0...master
+[Unreleased]: https://github.com/erichdongubler/adhesion-rs/compare/v0.5.0...master
+[0.5.0]: https://github.com/erichdongubler/adhesion-rs/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/erichdongubler/adhesion-rs/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/erichdongubler/adhesion-rs/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/erichdongubler/adhesion-rs/compare/c34f4006af894faa23b534fc2243720e4b7b5370...v0.2.0
