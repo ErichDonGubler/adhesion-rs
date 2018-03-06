@@ -1,7 +1,15 @@
+#![recursion_limit="256"]
+
 #[macro_use]
 extern crate adhesion;
 #[macro_use]
 extern crate galvanic_assert;
+
+#[test]
+fn empty_fn() {
+    contract! { fn asdf() {} }
+    asdf();
+}
 
 #[test]
 fn most_basic() {
@@ -247,4 +255,26 @@ fn visibility() {
     no_pub();
     just_pub();
     pub_crate();
+}
+
+#[test]
+fn global_double_check() {
+    contract!{
+        double_check {
+            panic!("D'oh!");
+        }
+
+        #[allow(unreachable_code)]
+        fn test1() {}
+
+        #[allow(unreachable_code)]
+        fn test2() {}
+
+        #[allow(unreachable_code)]
+        fn test3() {}
+    }
+
+    assert_that!(test1(), panics);
+    assert_that!(test2(), panics);
+    assert_that!(test3(), panics);
 }

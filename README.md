@@ -42,27 +42,27 @@ after `body` has run:
 ```rust,should_panic,skt-main
 struct Counter {
     count: u32,
-	max: u32
+    max: u32
 }
 
 contract! {
-    fn increment_counter(c: &mut Counter) -> () { // Unfortunately, the () return type is necessary for now (see issue #12)
+    fn increment_counter(c: &mut Counter) {
         double_check {
-		    assert!(c.count <= c.max, "counter max has been exceeded");
-		}
-		body {
-			c.count += 1;
-		}
+            assert!(c.count <= c.max, "counter max has been exceeded");
+        }
+        body {
+            c.count += 1;
+        }
     }
 }
 
 let mut counter = Counter { count: 0, max: 3 };
 
 macro_rules! assert_incremented_eq {
-	($e: expr) => ({
-		increment_counter(&mut counter);
-		assert!(counter.count == $e, format!("expected counter to be {}, got {}", $e, counter.count));
-	})
+    ($e: expr) => ({
+        increment_counter(&mut counter);
+        assert!(counter.count == $e, format!("expected counter to be {}, got {}", $e, counter.count));
+    })
 }
 
 assert_incremented_eq!(1);
@@ -71,22 +71,48 @@ assert_incremented_eq!(3);
 assert_incremented_eq!(4); // panics!
 ```
 
-When every contract block is being utilized, the order of the checks inserted
-into the contract definition are as follows:
+Actually, the above example can use a top-level `double_check` block inside of
+an `impl` block instead, so that invariants can be maintained for each method
+without needing to duplicate code:
 
-1. `pre`
-2. `double_check`
-3. `body`
-4. `double_check`
-5. `post`
+```rust,should_panic,skt-main
+struct Counter {
+    count: u32,
+    max: u32
+}
 
-More examples can be found in:
-* The [examples directory](/examples)
-* The [test suite](/tests/lib.rs) for this library
+impl Counter {
+    contract! {
+        double_check {
+            assert!(self.count <= self.max, "counter max has been exceeded");
+        }
 
-It should be noted that conditional compilation is NOT handled by this
-library, and that if conditional compilation is desired, [`cfg` statements](https://doc.rust-lang.org/beta/reference/attributes.html#conditional-compilation)
-should be used like with any most other Rust code.
+        fn increment(&mut self) {
+            body {
+                self.count.checked_add();
+            }
+        }
+    }
+
+}
+
+let mut counter = Counter { count: 0, max: 3 };
+
+macro_rules! assert_incremented_eq {
+    ($e: expr) => ({
+        counter.increment();
+        assert!(counter.count == $e, format!("expected counter to be {}, got {}", $e, counter.count));
+    })
+}
+
+assert_incremented_eq!(1);
+assert_incremented_eq!(2);
+assert_incremented_eq!(3);
+assert_incremented_eq!(4); // panics!
+```
+
+Nifty, right? Check out [the docs](https://docs.rs/adhesion) if you want more
+detail about this crate and what you can do with it.
 
 ## FAQ
 
