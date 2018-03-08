@@ -5,7 +5,7 @@
 [![crates.io latest published version](https://img.shields.io/crates/v/adhesion.svg)](https://crates.io/crates/adhesion)
 [![docs.rs latest published version](https://docs.rs/adhesion/badge.svg)](https://docs.rs/adhesion)
 
-A set of macros for [design by contact](https://en.wikipedia.org/wiki/Design_by_contract)
+A set of macros for [design by contract](https://en.wikipedia.org/wiki/Design_by_contract)
 in Rust. The design of this library was inspired by [D's contract programming
 facilities](https://tour.dlang.org/tour/en/gems/contract-programming).
 Here's a quick example:
