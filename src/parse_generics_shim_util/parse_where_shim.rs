@@ -7,13 +7,6 @@ Licensed under the MIT license (see LICENSE or <http://opensource.org
 files in the project carrying such notice may not be copied, modified,
 or distributed except according to those terms.
 */
-#[doc(hidden)]
-#[macro_export]
-macro_rules! parse_where_shim {
-    ($($body:tt)*) => {
-        parse_where! { $($body)* }
-    };
-}
 
 #[doc(hidden)]
 #[macro_export]
