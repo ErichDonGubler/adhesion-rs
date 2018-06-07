@@ -17,9 +17,9 @@ appveyor = { repository = "ErichDonGubler/adhesion-rs" }
 travis-ci = { repository = "ErichDonGubler/adhesion-rs" }
 
 [build-dependencies]
-skeptic = "0.10.0"
+skeptic = "0.13.3"
 
 [dev-dependencies]
 galvanic-assert = "0.8.3"
 scan-rules = "0.2.0"
-skeptic = "0.10.0"
+skeptic = "0.13.3"
