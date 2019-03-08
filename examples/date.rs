@@ -1,15 +1,18 @@
 //! This example is derived from material found [here](https://tour.dlang.org/tour/en/gems/contract-programming).
 
-#[macro_use]
-extern crate adhesion;
-#[macro_use]
-extern crate galvanic_assert;
-#[macro_use]
-extern crate scan_rules;
-
-use scan_rules::ScanError;
-use std::str::FromStr;
-use std::string::ToString;
+use {
+    adhesion::contract,
+    galvanic_assert::assert_that,
+    scan_rules::{
+        scan,
+        scan_rules_impl,
+        ScanError,
+    },
+    std::{
+        str::FromStr,
+        string::ToString,
+    }
+};
 
 #[derive(PartialEq)]
 struct Date {
@@ -32,7 +35,7 @@ impl FromStr for Date {
                 }
             }
             post(ret) {
-                if let &Ok(ref date) = &ret {
+                if let &Ok(ref date) = ret {
                     assert!(date.year >= 1900);
                     assert!(date.month >= 1 && date.month <= 12);
                     assert!(date.day >= 1 && date.day <= 31);

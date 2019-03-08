@@ -1,15 +1,33 @@
 //! As the purpose of this crate is to expose the `contract` macro, see [its
-//! documentation](./macro.contract.html). You may also be interested in
+//! documentation](./attr.contract.html). You may also be interested in
 //! checking out:
 //!
 //! * The README.md in source, most easily viewed at Github
 //!     [here](https://github.com/ErichDonGubler/adhesion-rs)
 //! * This crate's [example files](https://github.com/ErichDonGubler/adhesion-rs/tree/master/examples)
 //! * This crate's [test suite](https://github.com/ErichDonGubler/adhesion-rs/tree/master/tests)
-#![deny(missing_docs)]
-#![doc(html_root_url = "https://docs.rs/adhesion/0.4.0")]
+// #![deny(missing_docs)]
+#![doc(html_root_url = "https://docs.rs/adhesion/0.5.0")]
 
-mod parse_generics_shim_util;
+extern crate proc_macro;
+
+use {
+    proc_macro::TokenStream,
+    proc_macro2::TokenStream as TokenStream2,
+    quote::{quote, ToTokens, TokenStreamExt},
+    std::fmt::{
+        Debug,
+        Formatter,
+        Result as FmtResult,
+    },
+    syn::{
+        braced, parenthesized,
+        parse::{Parse, ParseStream, Result as ParseResult},
+        parse2,
+        token::{Async, Const, Default as DefaultToken, Unsafe},
+        Abi, Attribute, Block, FnArg, FnDecl, Ident, Item, MethodSig, Visibility,
+    },
+};
 
 /// Converts one or more `fn` definitions inside to be contracted functions that
 /// may have pre- and post-condition checks. The following blocks are valid inside
@@ -21,9 +39,8 @@ mod parse_generics_shim_util;
 /// 3. `post` -- runs once after `body`.
 /// 5. `double_check` -- runs twice; after `pre`, and before `post`.
 ///
-/// A `double_check` block may be used at the top level of a `contract!`
-/// invocation, which will be used by ALL `fn` definitions inside. This block
-/// is particularly useful for structs, where invariants for all data members
+/// A `#[contract]` may be used on an `impl` block , which will be used by ALL `fn` definitions
+/// inside. This block is particularly useful for structs, where invariants for all data members
 /// may need to be maintained across method calls.
 ///
 /// When every contract block is being utilized, the final order of the checks
@@ -46,12 +63,11 @@ mod parse_generics_shim_util;
 /// # Examples
 ///
 /// ```
-/// # #[macro_use]
-/// # extern crate adhesion;
-/// # #[macro_use]
-/// # extern crate galvanic_assert;
+/// # use {
+/// #     adhesion::contract,
+/// #     galvanic_assert::assert_that,
+/// # };
 /// #
-/// # fn main () {
 /// contract! {
 ///     fn asdf(asda: bool, stuff: u64) -> bool {
 ///         pre {
@@ -61,7 +77,7 @@ mod parse_generics_shim_util;
 ///             asda
 ///         }
 ///         post(return_value) {
-///             assert!(return_value == (stuff % 3 == 0), "post-condition violation");
+///             assert!(return_value == &(stuff % 3 == 0), "post-condition violation");
 ///         }
 ///         double_check {
 ///             assert!(stuff > 5, "double_check violation");
@@ -69,6 +85,7 @@ mod parse_generics_shim_util;
 ///     }
 /// }
 ///
+/// # fn main () {
 /// assert_that!(asdf(true, 7), panics); // post failure
 /// assert_that!(asdf(true, 64), panics); // pre failure
 /// assert_that!(asdf(false, 3), panics); // double_check failure
@@ -78,305 +95,454 @@ mod parse_generics_shim_util;
 /// asdf(true, 24);
 /// # }
 /// ```
-///
-/// ```
-/// # #[macro_use]
-/// # extern crate adhesion;
-/// # #[macro_use]
-/// # extern crate galvanic_assert;
-/// #
-/// # fn main () {
-/// struct Counter {
-///     count: u32,
-///     max: u32,
-/// }
-///
-/// impl Counter {
-///     contract! {
-///         double_check {
-///             assert!(self.count <= self.max);
-///         }
-///
-///         fn tick_up(&mut self) {
-///             body {
-///                 // Force a panic if this overflows, even in release
-///                 self.count = self.count.checked_add(1).unwrap();
-///             }
-///         }
-///
-///         fn tick_down(&mut self) {
-///             body {
-///                 // Force a panic if this underflows, even in release
-///                 self.count = self.count.checked_sub(1).unwrap();
-///             }
-///         }
-///     }
-/// }
-/// # }
-/// ```
-#[macro_export]
-macro_rules! contract {
-    (
-        @muncher,
-        [double_check $double_check: tt],
-        $(#[$attribute: meta])*
-        $(pub$(($access_modifier: ident))*)* fn $fn_name: ident $($tail: tt)*
-    ) => {
-        contract_fn! {
-            [callback contract(@muncher, [double_check $double_check],), double_check $double_check],
-            $(#[$attribute])*
-            $(pub$(($access_modifier))*)* fn $fn_name $($tail)*
-        }
-    };
-    (
-        @muncher,
-        [double_check $_old_double_check: tt],
-        double_check $double_check: tt
-        $($tail: tt)+
-    ) => {
-        contract! {
-            @muncher,
-            [double_check $double_check],
-            $($tail)+
-        }
-    };
-    (
-        @muncher,
-        [double_check $_old_double_check: tt],
-    ) => {};
-    (
-        $($tail: tt)*
-    ) => {
-        contract! {
-            @muncher,
-            [double_check {}],
-            $($tail)*
-        }
-    };
+#[proc_macro]
+pub fn contract(item: TokenStream) -> TokenStream {
+    let parsed: ParsedContractItem = parse2(TokenStream2::from(item)).unwrap();
+    TokenStream::from(quote! {
+        #parsed
+    })
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! contract_fn {
-    (
-        [callback $($callback: ident ($($callback_args: tt)*))*, double_check $double_check: tt],
-        $(#[$attribute: meta])*
-        $(pub$(($access_modifier: ident))*)* fn $fn_name: ident $($tail: tt)*
-    ) => {
-        parse_generics_shim! {
-            { constr },
-            then contract_fn!(@after_bracket_generics, [callback $($callback($($callback_args)*))*, double_check $double_check], $(#[$attribute])* $(pub$(($access_modifier))*)* fn $fn_name,),
-            $($tail)*
+fn parse_fn_decl(fn_token: syn::token::Fn, input: ParseStream) -> ParseResult<FnDecl> {
+    let content;
+    Ok(FnDecl {
+        fn_token,
+        generics: input.parse()?,
+        paren_token: parenthesized!(content in input),
+        inputs: content.parse_terminated(FnArg::parse)?,
+        variadic: input.parse()?,
+        output: input.parse()?,
+    })
+}
+
+/// The fields of this `struct` are intended to mirror that of `ImplItemMethod`, except for the body.
+#[derive(Clone)]
+struct ImplMethodSig {
+    attrs: Vec<Attribute>,
+    vis: Visibility,
+    defaultness: Option<DefaultToken>,
+    sig: MethodSig,
+}
+
+impl Debug for ImplMethodSig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
+
+impl Parse for ImplMethodSig {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let mut attrs = input.call(Attribute::parse_outer)?;
+        let vis = input.parse()?;
+        let defaultness = input.parse()?;
+        let sig = {
+            let constness = input.parse()?;
+            let unsafety = input.parse()?;
+            let asyncness = input.parse()?;
+            let abi = input.parse()?;
+            let fn_token = input.parse()?;
+            let ident = input.parse()?;
+            let decl = parse_fn_decl(fn_token, input)?;
+            MethodSig {
+                constness,
+                unsafety,
+                asyncness,
+                abi,
+                ident,
+                decl,
+            }
+        };
+        attrs.extend(input.call(Attribute::parse_inner)?);
+        Ok(ImplMethodSig {
+            attrs,
+            vis,
+            defaultness,
+            sig,
+        })
+    }
+}
+
+impl ToTokens for ImplMethodSig {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        let Self {
+            attrs,
+            vis,
+            defaultness,
+            sig,
+        } = self;
+        stream.append_all({
+            quote! {
+                #(#attrs)*
+                #vis
+                #defaultness
+                #sig
+            }
+        })
+    }
+}
+
+/// The fields of this `struct` are intended to mirror that of ItemFn, except for the body.
+#[derive(Clone)]
+struct FnSig {
+    attrs: Vec<Attribute>,
+    vis: Visibility,
+    constness: Option<Const>,
+    unsafety: Option<Unsafe>,
+    asyncness: Option<Async>,
+    abi: Option<Abi>,
+    ident: Ident,
+    decl: Box<FnDecl>,
+}
+
+impl Debug for FnSig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
+
+impl Parse for FnSig {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let mut attrs = input.call(Attribute::parse_outer)?;
+
+        let vis = input.parse()?;
+        let constness = input.parse()?;
+        let unsafety = input.parse()?;
+        let asyncness = input.parse()?;
+        let abi = input.parse()?;
+        let fn_token = input.parse()?;
+        let ident = input.parse()?;
+        let decl = Box::new(parse_fn_decl(fn_token, input)?);
+
+        attrs.extend(input.call(Attribute::parse_inner)?);
+        Ok(FnSig {
+            attrs,
+            vis,
+            constness,
+            unsafety,
+            asyncness,
+            abi,
+            ident,
+            decl,
+        })
+    }
+}
+
+impl ToTokens for FnSig {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        let FnSig {
+            attrs,
+            vis,
+            constness,
+            unsafety,
+            asyncness,
+            abi,
+            ident,
+            decl,
+        } = self;
+
+        let FnDecl {
+            fn_token,
+            generics,
+            paren_token: _,
+            inputs,
+            variadic,
+            output,
+        } = decl.as_ref();
+
+        stream.append_all(quote! {
+            #(#attrs)*
+            #vis
+            #constness
+            #unsafety
+            #asyncness
+            #abi
+            #fn_token
+            #ident
+            #generics
+            (#inputs)
+            #variadic
+            #output
+        });
+    }
+}
+
+/// The base model for all contracts that Adhesion uses.
+#[derive(Clone)]
+struct Contract {
+    inner_attributes: Vec<Attribute>,
+    /// The core logic of the function.
+    body: Box<Block>,
+    /// Pre-condition checks for this function.
+    pre: Vec<Block>,
+    /// Post-condition checks for this function.
+    post: Vec<(Option<Ident>, Block)>,
+    /// Pre- and post-condition checks for this function.
+    double_check: Vec<Block>,
+}
+
+impl Parse for Contract {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let inner_attributes = input.call(Attribute::parse_inner)?;
+        // TODO: Implement contract parsing
+        let mut body = None;
+        let mut pre = Vec::new();
+        let mut post = Vec::new();
+        let mut double_check = Vec::new();
+
+        while !input.is_empty() {
+            let ident: Ident = input.parse()?;
+            match ident.to_string().as_ref() {
+                "pre" => {
+                    pre.push(input.parse()?);
+                }
+                "post" => {
+                    let mut ret_val_ident = None;
+                    let _ = (|| {
+                        let paren_contents;
+                        parenthesized!(paren_contents in input);
+                        ret_val_ident = paren_contents.parse()?;
+                        Ok(())
+                    })();
+                    post.push((ret_val_ident, input.parse()?));
+                }
+                "double_check" => double_check.push(input.parse()?),
+                "body" => {
+                    if body.is_some() {
+                        panic!("cannot have more than one `body` block");
+                    } else {
+                        body = Some(input.parse()?);
+                    }
+                }
+                i => panic!("unrecognized contract group {:?}", i),
+            }
         }
-    };
-    (
-        @after_bracket_generics,
-        [callback $($callback: ident ($($callback_args: tt)*))*, double_check $double_check: tt],
-        $(#[$attribute: meta])*
-        $(pub$(($access_modifier: ident))*)* fn $fn_name: ident,
-        {
-            constr: [$($constr: tt)*],
-        },
-        $args: tt $( -> $return_type: ty)* where $($tail: tt)*
-    ) => {
-        parse_where_shim! {
-            { clause, preds },
-            then contract_fn!(
-                @after_where_generics,
-                [callback $($callback($($callback_args)*))*, double_check $double_check],
-                $(#[$attribute])* $(pub$(($access_modifier))*)* fn $fn_name,
-                {
-                    constr: [$($constr)*],
+
+        Ok(Contract {
+            inner_attributes,
+            body: body.unwrap_or_else(|| parse2(quote!({})).unwrap()),
+            pre,
+            post,
+            double_check,
+        })
+    }
+}
+
+impl Contract {
+    fn parse_from_fn_body(input: ParseStream) -> ParseResult<Contract> {
+        let body;
+        braced!(body in input);
+        body.parse()
+    }
+}
+
+#[derive(Clone)]
+struct FullContract<'c, 'idc> {
+    contract: &'c Contract,
+    impl_double_check: Option<&'idc [Block]>,
+}
+
+impl<'c, 'idc> Debug for FullContract<'c, 'idc> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
+
+impl<'c, 'idc> ToTokens for FullContract<'c, 'idc> {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        let Self {
+            contract:
+                Contract {
+                    inner_attributes,
+                    pre,
+                    post,
+                    double_check,
+                    body,
                 },
-                $args $( -> $return_type)*,
-            ),
-            where $($tail)*
-        }
-    };
-    (
-        @after_bracket_generics,
-        [callback $($callback: ident ($($callback_args: tt)*))*, double_check $double_check: tt],
-        $(#[$attribute: meta])*
-        $(pub$(($access_modifier: ident))*)* fn $fn_name: ident,
-        {
-            constr: [$($constr: tt)*],
-        },
-        $args: tt $( -> $return_type: ty)*
-        {
-            $($block: tt)*
-        }
-        $($tail: tt)*
-    ) => {
-        contract_fn! {
-            @after_where_generics,
-            [callback $($callback($($callback_args)*))*, double_check $double_check],
-            $(#[$attribute])*
-            $(pub$(($access_modifier))*)* fn $fn_name,
-            {
-                constr: [$($constr)*],
-            },
-            $args $( -> $return_type)*,
-            {
-                clause: [],
-                preds: [],
-            },
-            {
-                $($block)*
-            }
-            $($tail)*
-        }
-    };
-    (
-        @after_where_generics,
-        [callback $($callback: ident ($($callback_args: tt)*))*, double_check $double_check: tt],
-        $(#[$attribute: meta])*
-        $(pub$(($access_modifier: ident))*)* fn $fn_name: ident,
-        {
-            constr: [$($constr: tt)*],
-        },
-        $args: tt $( -> $return_type: ty)*,
-        {
-            clause: [$($where_clause: tt)*],
-            preds: $preds: tt,
-        },
-        {
-            $($block: tt)*
-        }
-        $($tail: tt)*
-    ) => {
-        $(#[$attribute])*
-        $(pub$(($access_modifier))*)* fn $fn_name <$($constr)*> $args $( -> $return_type )* $($where_clause)* {
-            contract_body! {
-                (pre {}, body {}, post (_def) {}, double_check {}, global_double_check $double_check)
-                $($block)*
-            }
-        }
-        contract_fn!{
-            @callback,
-            [$($callback($($callback_args)*))*],
-            $($tail)*
-        }
-    };
-    (
-        @callback,
-        [],
-        $($tail: tt)*
-    ) => {};
-    (
-        @callback,
-        [$callback: ident ($($args: tt)*)],
-        $($tail: tt)*
-    ) => {
-        $callback!{ $($args)* $($tail)* }
-    };
+            impl_double_check,
+        } = self;
+
+        let post_assigns = post.iter().map(|(i, _)| quote!(let #i = &ret;));
+        let post_blocks = post.iter().map(|(_, b)| b);
+        let impl_double_check = impl_double_check.unwrap_or(&[]);
+
+        stream.append_all(quote! {
+            #(#inner_attributes)*
+            #(#pre)*
+            #(#impl_double_check)*
+            #(#double_check)*
+            let ret = #body;
+            #(#impl_double_check)*
+            #(#double_check)*
+            #(
+                {
+                    #post_assigns
+                    #post_blocks
+                }
+            )*
+            ret
+        })
+    }
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! contract_body {
-    (
-        ($($blocks: tt)*)
-        #![$inner_attribute: meta]
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            ($($blocks)*, #![$inner_attribute])
-            $($tail)*
-        }
-    };
-    (
-        ($($blocks: tt)*)
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            ($($blocks)*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre {}, body $body: tt, post ($return_value: ident) $post: tt, double_check $double_check: tt, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-        pre $pre: tt
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, double_check $double_check, global_double_check $global_double_check $(, #![$inner_attribute])*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre $pre: tt, body {}, post ($return_value: ident) $post: tt, double_check $double_check: tt, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-        body $body: tt
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, double_check $double_check, global_double_check $global_double_check $(, #![$inner_attribute])*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($old_return_value: ident) {}, double_check $double_check: tt, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-        post ($return_value: ident) $post: tt
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, double_check $double_check, global_double_check $global_double_check $(, #![$inner_attribute])*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) {}, double_check $double_check: tt, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-        post $post: tt
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, double_check $double_check, global_double_check $global_double_check $(, #![$inner_attribute])*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, double_check {}, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-        double_check $double_check: tt
-        $($tail: tt)*
-    ) => {
-        contract_body! {
-            @processing_blocks
-            (pre $pre, body $body, post ($return_value) $post, double_check $double_check, global_double_check $global_double_check $(, #![$inner_attribute])*)
-            $($tail)*
-        }
-    };
-    (
-        @processing_blocks
-        (pre $pre: tt, body $body: tt, post ($return_value: ident) $post: tt, double_check $double_check: tt, global_double_check $global_double_check: tt $(, #![$inner_attribute: meta])*)
-    ) => {
-        {
-            $(#![$inner_attribute])*
+/// Represents a "contractualized" `impl` block.
+#[derive(Clone)]
+struct ContractImplBlock {
+    double_check: Vec<Block>,
+    items: Vec<Item>,
+    contracted_methods: Vec<ContractImplMethod>,
+}
 
-            $pre
+impl Debug for ContractImplBlock {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
 
-            $global_double_check
+impl ToTokens for ContractImplBlock {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        let ContractImplBlock {
+            items,
+            contracted_methods,
+            double_check,
+        } = self;
 
-            $double_check
+        let contracted_methods = contracted_methods.iter().map(
+            |ContractImplMethod {
+                 signature,
+                 contract,
+             }| {
+                let contract = FullContract {
+                    contract,
+                    impl_double_check: Some(double_check.as_slice()),
+                };
+                quote! {
+                    #signature { #contract }
+                }
+            },
+        );
 
-            let $return_value = $body;
+        stream.append_all(quote! {
+            #(#items)*
+            #(#contracted_methods)*
+        })
+    }
+}
 
-            $global_double_check
+/// Represents a "contractualized" free function.
+#[derive(Clone)]
+struct ContractFn {
+    signature: FnSig,
+    contract: Contract,
+}
 
-            $double_check
+impl Debug for ContractFn {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
 
-            $post
+impl Parse for ContractFn {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        Ok(ContractFn {
+            signature: input.parse()?,
+            contract: Contract::parse_from_fn_body(input)?,
+        })
+    }
+}
 
-            $return_value
+impl ToTokens for ContractFn {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        let Self {
+            signature,
+            contract,
+        } = self;
+
+        let contract = FullContract {
+            contract,
+            impl_double_check: None,
+        };
+
+        stream.append_all(quote! {
+            #signature { #contract }
+        });
+    }
+}
+
+/// Represents a "contractualized" function.
+#[derive(Clone)]
+struct ContractImplMethod {
+    signature: ImplMethodSig,
+    contract: Contract,
+}
+
+impl Debug for ContractImplMethod {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{:?}", self.to_tokens(&mut TokenStream2::new()))
+    }
+}
+
+impl Parse for ContractImplMethod {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        let signature: ImplMethodSig = input.parse()?;
+        let contract = Contract::parse_from_fn_body(input)?;
+        if !input.is_empty() {
+            println!("contract: {:?}", ContractImplMethod {
+                signature: signature.clone(),
+                contract: contract.clone(),
+            });
+            println!("remaining input: {}", input);
         }
-    };
+        assert!(input.is_empty());
+
+        Ok(ContractImplMethod {
+            signature,
+            contract,
+        })
+    }
+}
+
+impl ToTokens for ContractImplMethod {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        stream.append_all({
+            let ContractImplMethod {
+                signature,
+                contract,
+            } = self;
+
+            let contract = FullContract {
+                contract,
+                impl_double_check: None,
+            };
+            quote! {
+                #signature { #contract }
+            }
+        })
+    }
+}
+
+#[derive(Debug)]
+enum ParsedContractItem {
+    ImplBlock(ContractImplBlock),
+    ImplMethod(ContractImplMethod),
+    Fn(ContractFn),
+}
+
+impl Parse for ParsedContractItem {
+    fn parse(input: ParseStream) -> ParseResult<Self> {
+        use self::ParsedContractItem::*;
+
+        Ok(ImplMethod(input.parse()?))
+    }
+}
+
+impl ToTokens for ParsedContractItem {
+    fn to_tokens(&self, stream: &mut TokenStream2) {
+        use self::ParsedContractItem::*;
+
+        stream.append_all(match self {
+            ImplBlock(b) => quote!(#b),
+            ImplMethod(m) => quote!(#m),
+            Fn(f) => quote!(#f),
+        })
+    }
 }
